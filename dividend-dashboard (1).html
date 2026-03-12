@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Dividend Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#070d1a;color:#e2e8f0;font-family:'Inter',sans-serif;min-height:100vh;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.fade{animation:fadeUp 0.4s ease both;}
+.fade1{animation:fadeUp 0.4s ease 0.05s both;}
+.fade2{animation:fadeUp 0.4s ease 0.1s both;}
+.fade3{animation:fadeUp 0.4s ease 0.15s both;}
+.fade4{animation:fadeUp 0.4s ease 0.2s both;}
+.pulse{animation:pulse 2s infinite;}
+input[type=range]{-webkit-appearance:none;height:6px;border-radius:3px;background:#1e3a5f;outline:none;width:100%;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#38bdf8;cursor:pointer;border:2px solid #070d1a;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:#0a0f1a;}::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:2px;}
+#header{background:linear-gradient(180deg,#0a1628,#070d1a);border-bottom:1px solid #1e3a5f;padding:24px 32px 0;margin-bottom:28px;}
+.header-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.tabs{display:flex;gap:2px;flex-wrap:wrap;}
+.tab-btn{background:transparent;border:none;border-bottom:2px solid transparent;color:#64748b;padding:10px 18px;font-size:13px;font-weight:500;cursor:pointer;text-transform:capitalize;letter-spacing:0.02em;transition:all 0.2s;border-radius:6px 6px 0 0;font-family:'Inter',sans-serif;}
+.tab-btn.active{background:#1e3a5f;border-bottom-color:#38bdf8;color:#f1f5f9;}
+.tab-btn:hover:not(.active){color:#94a3b8;}
+#content{padding:0 32px 60px;}
+.cards{display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap;}
+.card{background:linear-gradient(135deg,#0f172a,#0d1e35);border:1px solid #1e3a5f;border-radius:12px;padding:16px 20px;flex:1;min-width:145px;}
+.card-label{color:#64748b;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.card-value{font-family:'DM Mono',monospace;font-size:20px;font-weight:700;margin-bottom:3px;}
+.card-sub{color:#475569;font-size:11px;}
+.box{background:#0d1829;border:1px solid #1e3a5f;border-radius:12px;padding:24px;margin-bottom:20px;}
+.box-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;}
+.box-sub{color:#475569;font-size:12px;margin-bottom:16px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{color:#475569;font-weight:500;text-align:left;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;border-bottom:1px solid #1e3a5f;}
+td{padding:10px 12px;border-bottom:1px solid #0f1e30;font-family:'DM Mono',monospace;}
+tr:hover td{background:#111f35;}
+.mono{font-family:'DM Mono',monospace;}
+.slider-box{background:linear-gradient(135deg,#0d1829,#091526);border:1px solid #1e4a6a;border-radius:14px;padding:20px 26px;margin-bottom:24px;}
+.slider-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.slider-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:3px;}
+.slider-ctx{color:#475569;font-size:12px;}
+.dollar-pre{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#38bdf8;font-family:'DM Mono',monospace;font-size:18px;font-weight:700;pointer-events:none;}
+input.mc-num{background:#070d1a;border:2px solid #38bdf8;border-radius:8px;color:#38bdf8;font-family:'DM Mono',monospace;font-size:20px;font-weight:700;padding:8px 14px 8px 32px;width:148px;outline:none;}
+.slider-ticks{display:flex;justify-content:space-between;margin-bottom:14px;}
+.slider-tick{color:#334155;font-size:10px;font-family:'DM Mono',monospace;}
+.presets{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.preset-label{color:#475569;font-size:11px;margin-right:2px;}
+.preset-btn{background:#0a1628;border:1px solid #1e3a5f;border-radius:6px;color:#64748b;font-family:'DM Mono',monospace;font-size:12px;padding:5px 13px;cursor:pointer;transition:all 0.15s;}
+.preset-btn.active{background:#38bdf8;border-color:#38bdf8;color:#070d1a;font-weight:700;}
+.contrib-info{display:flex;gap:24px;padding:12px 16px;background:#070d1a;border-radius:8px;border:1px solid #34d39933;flex-wrap:wrap;margin-top:14px;}
+.ci-item p:first-child{color:#475569;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;}
+.ci-item p:last-child{font-family:'DM Mono',monospace;font-size:14px;font-weight:600;}
+.pos-grid{display:grid;gap:12px;}
+.pos-row{background:#0d1829;border:1px solid #1e3a5f;border-radius:10px;padding:18px 24px;display:grid;grid-template-columns:120px 1fr 1fr 1fr 1fr 1fr;align-items:center;gap:16px;transition:background 0.2s;cursor:default;}
+.pos-row:hover{background:#111f35;}
+.alloc-bg{background:#0a1628;border-radius:4px;height:6px;overflow:hidden;}
+.alloc-bar{height:100%;border-radius:4px;}
+.income-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.inc-card{background:#0a1628;border-radius:8px;padding:14px 16px;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:7px;}
+.leg-line{width:22px;height:3px;border-radius:2px;}
+.leg-label{font-size:12px;color:#94a3b8;font-weight:600;}
+.leg-sub{font-size:11px;color:#475569;margin-left:3px;}
+.takeaway{margin-top:20px;padding:16px 20px;background:#070d1a;border-radius:8px;border:1px solid #1e3a5f;}
+.warning-box{background:#1a0f0a;border:1px solid #f59e0b44;border-radius:10px;padding:14px 20px;margin-bottom:20px;}
+.hint-box{background:#0d1829;border:1px solid #38bdf833;border-radius:10px;padding:14px 20px;margin-bottom:20px;}
+</style>
+</head>
+<body>
+<div id="header">
+  <div class="header-top">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <div class="pulse" style="width:8px;height:8px;border-radius:50%;background:#22c55e;"></div>
+        <span style="color:#64748b;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Live Portfolio · DRIP Enabled</span>
+      </div>
+      <h1 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-0.02em;color:#f1f5f9;">Dividend Dashboard</h1>
+    </div>
+    <div style="text-align:right;">
+      <p style="color:#64748b;font-size:11px;margin-bottom:2px;">Net Liquidation</p>
+      <p id="hdr-total" class="mono" style="font-size:22px;font-weight:700;color:#38bdf8;"></p>
+      <p id="hdr-sub" style="color:#475569;font-size:11px;margin-top:2px;"></p>
+    </div>
+  </div>
+  <div class="tabs" id="tabs"></div>
+</div>
+<div id="content"></div>
+
+<script>
+const PORTFOLIO=[
+  {symbol:"SCHD",value:14988,yield:0.037,industry:"ETF (Dividend)",color:"#34d399"},
+  {symbol:"SCHF",value:10038,yield:0.032,industry:"International", color:"#38bdf8"},
+  {symbol:"VOO", value:9933, yield:0.013,industry:"ETF (US)",       color:"#818cf8"},
+  {symbol:"VICI",value:9831, yield:0.055,industry:"Real Estate",    color:"#2dd4bf"},
+  {symbol:"JNJ", value:5099, yield:0.032,industry:"Healthcare",     color:"#a78bfa"},
+  {symbol:"JEPI",value:5038, yield:0.072,industry:"Covered Call",   color:"#fbbf24"},
+  {symbol:"O",   value:4969, yield:0.056,industry:"Real Estate",    color:"#f472b6"},
+  {symbol:"KO",  value:4881, yield:0.031,industry:"Consumer",       color:"#fb923c"},
+];
+const TOTAL=PORTFOLIO.reduce((s,p)=>s+p.value,0);
+const ANNUAL_DIV=PORTFOLIO.reduce((s,p)=>s+p.value*p.yield,0);
+const BLD=ANNUAL_DIV/TOTAL;
+const DR=0.086,SR=0.105,B20=0.20,B40=0.40,B75=0.75;
+let mc=2000;
+const charts={};
+
+const fK=n=>n>=1e9?`$${(n/1e9).toFixed(2)}B`:n>=1e6?`$${(n/1e6).toFixed(2)}M`:n>=1000?`$${(n/1000).toFixed(0)}k`:`$${Math.round(n)}`;
+const fF=n=>`$${Number(Math.round(n)).toLocaleString()}`;
+
+function buildTS(m,yrs=10){
+  const labels=[],vals=[],base=[];
+  let v=TOTAL,b=TOTAL,r=DR/12;
+  for(let y=0;y<=yrs;y++){
+    labels.push(`Y${y}`);vals.push(Math.round(v));base.push(Math.round(b));
+    for(let i=0;i<12;i++){v=v*(1+r)+m;b=b*(1+r);}
+  }
+  return{labels,vals,base};
+}
+function buildYr(m){
+  const rows=[];let v=TOTAL,r=DR/12;
+  for(let y=0;y<=10;y++){
+    rows.push({y,val:Math.round(v),ann:Math.round(v*BLD),mo:Math.round(v*BLD/12)});
+    for(let i=0;i<12;i++) v=v*(1+r)+m;
+  }
+  return rows;
+}
+function buildComp(m,yrs=20){
+  let d=TOTAL,s=TOTAL,bb=TOTAL,bm=TOTAL,bu=TOTAL;
+  const dm=DR/12,sm=SR/12,b2=B20/12,b4=B40/12,b7=B75/12;
+  const L=[],D=[],S=[],BB=[],BM=[],BU=[],IN=[];
+  for(let y=0;y<=yrs;y++){
+    L.push(`Y${y}`);D.push(Math.round(d));S.push(Math.round(s));
+    BB.push(Math.round(bb));BM.push(Math.round(bm));BU.push(Math.round(bu));
+    IN.push(Math.round(d*BLD));
+    for(let i=0;i<12;i++){d=d*(1+dm)+m;s=s*(1+sm)+m;bb=bb*(1+b2)+m;bm=bm*(1+b4)+m;bu=bu*(1+b7)+m;}
+  }
+  return{L,D,S,BB,BM,BU,IN};
+}
+
+const indMap={};
+PORTFOLIO.forEach(p=>{
+  if(!indMap[p.industry])indMap[p.industry]={name:p.industry,inc:0,color:p.color};
+  indMap[p.industry].inc+=p.value*p.yield;
+});
+const IND=Object.values(indMap);
+
+const CTIP={responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:"#0a1221",borderColor:"#1e3a5f",borderWidth:1,titleColor:"#64748b",bodyColor:"#e2e8f0",callbacks:{label:c=>` ${c.dataset.label}: ${fK(c.parsed.y)}`,title:i=>i[0].label}}},
+  scales:{x:{grid:{color:"#1e3a5f55"},ticks:{color:"#475569",font:{size:11}}},y:{grid:{color:"#1e3a5f55"},ticks:{color:"#475569",font:{size:11},callback:v=>fK(v)}}}};
+
+function mkChart(id,type,data,opts){
+  if(charts[id])charts[id].destroy();
+  const c=document.getElementById(id);
+  if(!c)return;
+  charts[id]=new Chart(c,{type,data,options:{...CTIP,...opts}});
+}
+
+function sliderHTML(ctx){
+  return`<div class="slider-box fade">
+    <div class="slider-top">
+      <div><div class="slider-title">Monthly Contribution</div><div class="slider-ctx">${ctx||"Same amount applied to all scenarios simultaneously"}</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="position:relative;"><span class="dollar-pre">$</span>
+        <input class="mc-num" id="mc-num" type="number" min="0" max="20000" step="100" value="${mc}"/></div>
+        <span style="color:#475569;font-size:14px;">/mo</span>
+      </div>
+    </div>
+    <input type="range" id="mc-range" min="0" max="10000" step="100" value="${Math.min(mc,10000)}" style="margin-bottom:6px;"/>
+    <div class="slider-ticks">${["$0","$2,500","$5,000","$7,500","$10,000"].map(l=>`<span class="slider-tick">${l}</span>`).join("")}</div>
+    <div class="presets"><span class="preset-label">QUICK SET:</span>
+      ${[0,1000,2000,3000,4000,5000].map(p=>`<button class="preset-btn${mc===p?" active":""}" onclick="setMC(${p})">${p===0?"None":"$"+p.toLocaleString()}</button>`).join("")}
+    </div>
+    ${mc>0?`<div class="contrib-info">
+      <div class="ci-item"><p>Annual</p><p style="color:#34d399">${fF(mc*12)}/yr</p></div>
+      <div class="ci-item"><p>20yr Total</p><p style="color:#34d399">${fF(mc*240)}</p></div>
+      <div class="ci-item"><p>Per Position</p><p style="color:#fbbf24">${fF(Math.round(mc/8))}/mo</p></div>
+      <div class="ci-item"><p>10yr Deployed</p><p style="color:#fbbf24">${fF(mc*120)}</p></div>
+    </div>`:""}
+  </div>`;
+}
+
+function bindSlider(){
+  const r=document.getElementById("mc-range"),n=document.getElementById("mc-num");
+  if(r)r.oninput=e=>setMC(+e.target.value);
+  if(n)n.oninput=e=>setMC(Math.max(0,Math.min(20000,+e.target.value)));
+}
+window.setMC=v=>{mc=v;renderContent();};
+
+function card(label,val,sub,color="#38bdf8",cls="fade",hl=false){
+  return`<div class="card ${cls}" style="${hl?`background:linear-gradient(135deg,${color}18,#0d1e35);border-color:${color}55`:""}">`+
+    `<div class="card-label">${label}</div><div class="card-value" style="color:${color}">${val}</div>`+
+    `${sub?`<div class="card-sub">${sub}</div>`:""}</div>`;
+}
+function leg(items){
+  return`<div class="legend">${items.filter(Boolean).map(([c,l,s])=>`<div class="leg"><div class="leg-line" style="background:${c}"></div><span class="leg-label">${l}</span>${s?`<span class="leg-sub">${s}</span>`:""}</div>`).join("")}</div>`;
+}
+
+// ── OVERVIEW ───────────────────────────────────────────────────────
+function renderOverview(){
+  const y0=buildYr(0)[10],yC=buildYr(mc)[10];
+  return sliderHTML("Split equally across all 8 positions · also applied to S&P and BTC tabs")+
+  `<div class="cards">
+    ${card("Portfolio Value",fF(TOTAL),"8 positions","#38bdf8","fade")}
+    ${card("Annual Dividends",fF(Math.round(ANNUAL_DIV)),`~$${Math.round(ANNUAL_DIV/4)}/quarter`,"#34d399","fade1")}
+    ${card("Monthly Contribution",mc===0?"None":fF(mc),mc>0?`$${Math.round(mc/8)}/position`:"DRIP only","#fbbf24","fade2",mc>0)}
+    ${card("Y10 w/ Contributions",fK(yC.val),mc>0?`+${fF(yC.val-y0.val)} vs DRIP only`:"DRIP only","#a78bfa","fade3",mc>0)}
+  </div>
+  <div class="box fade2">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+      <div><div class="box-title">Portfolio Value — 10 Years</div><div class="box-sub">DRIP only vs DRIP + monthly contributions</div></div>
+      ${leg([["#38bdf8","DRIP Only"],mc>0?["#34d399",`+${fF(mc)}/mo`]:null])}
+    </div>
+    <div style="height:260px;"><canvas id="c-ov"></canvas></div>
+  </div>
+  <div class="grid2">
+    <div class="box fade3">
+      <div class="box-title">Income by Industry</div>
+      <div style="color:#34d399;font-family:'DM Mono',monospace;font-size:17px;font-weight:600;margin-bottom:12px;">6 sectors</div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="width:160px;height:160px;flex-shrink:0;"><canvas id="c-pie"></canvas></div>
+        <div style="flex:1;">${IND.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:6px;"><div style="width:7px;height:7px;border-radius:2px;background:${d.color}"></div><span style="font-size:11px;color:#94a3b8">${d.name}</span></div>
+          <span class="mono" style="font-size:11px;color:${d.color}">$${Math.round(d.inc)}</span></div>`).join("")}
+        </div>
+      </div>
+    </div>
+    <div class="box fade4">
+      <div class="box-title">Yield on Cost</div>
+      <div style="color:#fbbf24;font-family:'DM Mono',monospace;font-size:17px;font-weight:600;margin-bottom:16px;">JEPI leads at 7.2%</div>
+      <div style="height:160px;"><canvas id="c-yld"></canvas></div>
+    </div>
+  </div>`;
+}
+function initOverview(){
+  const t0=buildTS(0),tC=buildTS(mc);
+  const ds=[{label:"DRIP Only",data:t0.vals,borderColor:"#38bdf8",backgroundColor:"rgba(56,189,248,0.15)",fill:true,tension:0.4,pointRadius:0}];
+  if(mc>0)ds.push({label:`+${fF(mc)}/mo`,data:tC.vals,borderColor:"#34d399",backgroundColor:"rgba(52,211,153,0.2)",fill:true,tension:0.4,pointRadius:0});
+  mkChart("c-ov","line",{labels:t0.labels,datasets:ds});
+  mkChart("c-pie","doughnut",{labels:IND.map(d=>d.name),datasets:[{data:IND.map(d=>d.inc),backgroundColor:IND.map(d=>d.color),borderWidth:0}]},{
+    cutout:"55%",responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:"#0a1221",borderColor:"#1e3a5f",borderWidth:1,callbacks:{label:c=>`$${Math.round(c.raw)}/yr`}}}
+  });
+  mkChart("c-yld","bar",{labels:PORTFOLIO.map(p=>p.symbol),datasets:[{label:"Yield %",data:PORTFOLIO.map(p=>+(p.yield*100).toFixed(2)),backgroundColor:PORTFOLIO.map(p=>p.color),borderRadius:4}]},{
+    responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#0a1221",borderColor:"#1e3a5f",borderWidth:1,callbacks:{label:c=>` ${c.parsed.y}%`}}},
+    scales:{x:{grid:{color:"#1e3a5f55"},ticks:{color:"#94a3b8",font:{size:11}}},y:{grid:{color:"#1e3a5f55"},ticks:{color:"#475569",font:{size:10},callback:v=>`${v}%`}}}
+  });
+}
+
+// ── GROWTH ─────────────────────────────────────────────────────────
+function renderGrowth(){
+  const r0=buildYr(0),rC=buildYr(mc),y0=r0[10],yC=rC[10],boost=yC.val-y0.val;
+  const cGain=mc>0?yC.val-TOTAL-mc*120:y0.val-TOTAL;
+  return sliderHTML("Split equally across all 8 positions · also reflected in S&P and BTC tabs")+
+  `<div class="cards">
+    ${card("Y10 — DRIP Only",fK(y0.val),`+${(((y0.val-TOTAL)/TOTAL)*100).toFixed(0)}% return`,"#38bdf8","fade")}
+    ${card(`Y10 — +${fF(mc)}/mo`,fK(yC.val),mc>0?`+${fF(boost)} more`:"same as DRIP","#34d399","fade1",mc>0)}
+    ${card("Total Contributions",mc>0?fF(mc*120):"—","10yr capital deployed","#fbbf24","fade2")}
+    ${card("Compounding Gain",fF(Math.round(cGain)),"above contributions","#a78bfa","fade3",true)}
+  </div>
+  <div class="box fade2">
+    <div class="box-title">10-Year Growth Comparison</div><div class="box-sub" style="margin-bottom:16px;">Compounded monthly</div>
+    <div style="height:280px;"><canvas id="c-gr"></canvas></div>
+  </div>
+  <div class="box fade3">
+    <div class="box-title" style="margin-bottom:20px;">Year-by-Year Breakdown</div>
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Year</th><th>DRIP Only</th><th>${mc>0?`+$${mc.toLocaleString()}/mo`:"—"}</th><th>Annual Divs</th><th>Monthly Income</th><th>Difference</th></tr></thead>
+      <tbody>${r0.map((row,i)=>{const cr=rC[i],diff=cr.val-row.val;return`<tr>
+        <td style="color:#64748b">Y${row.y}</td><td style="color:#38bdf8">${fF(row.val)}</td>
+        <td style="color:#34d399">${mc>0?fF(cr.val):"—"}</td><td style="color:#94a3b8">${fF(cr.ann)}</td>
+        <td style="color:#64748b">${fF(cr.mo)}</td><td style="color:${diff>0?"#34d399":"#475569"}">${diff>0?`+${fF(diff)}`:"—"}</td></tr>`;}).join("")}
+      </tbody>
+    </table></div>
+  </div>`;
+}
+function initGrowth(){
+  const t0=buildTS(0),tC=buildTS(mc);
+  const ds=[{label:"DRIP Only",data:t0.vals,borderColor:"#38bdf8",backgroundColor:"rgba(56,189,248,0.15)",fill:true,tension:0.4,pointRadius:0}];
+  if(mc>0)ds.push({label:`DRIP + $${mc.toLocaleString()}/mo`,data:tC.vals,borderColor:"#34d399",backgroundColor:"rgba(52,211,153,0.2)",fill:true,tension:0.4,pointRadius:0});
+  mkChart("c-gr","line",{labels:t0.labels,datasets:ds});
+}
+
+// ── INCOME ─────────────────────────────────────────────────────────
+function renderIncome(){
+  const r0=buildYr(0),rC=buildYr(mc),y0=r0[10],yC=rC[10];
+  return sliderHTML()+
+  `<div class="cards">
+    ${card("Annual Income Now",fF(Math.round(ANNUAL_DIV)),"before tax","#34d399","fade")}
+    ${card("After-Tax (23.8%)",fF(Math.round(ANNUAL_DIV*0.762)),"qualified rate","#38bdf8","fade1")}
+    ${card("Y10 — DRIP Only",fF(y0.ann),"annual dividends","#fbbf24","fade2")}
+    ${card(`Y10 +${fF(mc)}/mo`,fF(yC.ann),`+${fF(yC.ann-y0.ann)} more/yr`,"#a78bfa","fade3",mc>0)}
+  </div>
+  <div class="grid2">
+    <div class="box fade2">
+      <div class="box-title">Annual Dividend Income</div>
+      <div style="color:#34d399;font-family:'DM Mono',monospace;font-size:17px;font-weight:600;margin-bottom:16px;">DRIP vs + contributions</div>
+      <div style="height:220px;"><canvas id="c-ib"></canvas></div>
+    </div>
+    <div class="box fade3">
+      <div class="box-title">Monthly Income Growth</div>
+      <div style="color:#fbbf24;font-family:'DM Mono',monospace;font-size:17px;font-weight:600;margin-bottom:16px;">$${Math.round(ANNUAL_DIV/12)}/mo → $${yC.mo}/mo</div>
+      <div style="height:220px;"><canvas id="c-il"></canvas></div>
+    </div>
+  </div>
+  <div class="box fade4">
+    <div class="box-title" style="margin-bottom:16px;">Income per Position (Current)</div>
+    <div class="income-grid">${PORTFOLIO.map(p=>`
+      <div class="inc-card" style="border:1px solid ${p.color}22">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+          <span class="mono" style="color:${p.color};font-size:14px;font-weight:600">${p.symbol}</span>
+          <span style="font-size:11px;color:#475569">${(p.yield*100).toFixed(1)}%</span>
+        </div>
+        <div class="mono" style="font-size:17px;color:#f1f5f9;font-weight:600">$${Math.round(p.value*p.yield)}<span style="font-size:11px;color:#64748b">/yr</span></div>
+        <div style="color:#475569;font-size:11px;margin-top:2px">$${Math.round(p.value*p.yield/4)}/qtr</div>
+      </div>`).join("")}
+    </div>
+  </div>`;
+}
+function initIncome(){
+  const r0=buildYr(0),rC=buildYr(mc),labels=r0.map(r=>`Y${r.y}`);
+  const dsB=[{label:"DRIP Only",data:r0.map(r=>r.ann),backgroundColor:"#38bdf8",borderRadius:4}];
+  if(mc>0)dsB.push({label:`+$${mc.toLocaleString()}/mo`,data:rC.map(r=>r.ann),backgroundColor:"#34d399",borderRadius:4});
+  mkChart("c-ib","bar",{labels,datasets:dsB},{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#0a1221",borderColor:"#1e3a5f",borderWidth:1,callbacks:{label:c=>` ${c.dataset.label}: ${fK(c.raw)}`}}},scales:{x:{grid:{color:"#1e3a5f55"},ticks:{color:"#94a3b8",font:{size:11}}},y:{grid:{color:"#1e3a5f55"},ticks:{color:"#475569",font:{size:10},callback:v=>`$${(v/1000).toFixed(1)}k`}}}});
+  const dsL=[{label:"DRIP Only",data:r0.map(r=>r.mo),borderColor:"#38bdf8",fill:false,tension:0.4,pointRadius:3,pointBackgroundColor:"#38bdf8"}];
+  if(mc>0)dsL.push({label:`+$${mc.toLocaleString()}/mo`,data:rC.map(r=>r.mo),borderColor:"#fbbf24",fill:false,tension:0.4,pointRadius:3,pointBackgroundColor:"#fbbf24"});
+  mkChart("c-il","line",{labels,datasets:dsL},{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:"#0a1221",borderColor:"#1e3a5f",borderWidth:1,callbacks:{label:c=>` ${c.dataset.label}: $${c.raw}`}}},scales:{x:{grid:{color:"#1e3a5f55"},ticks:{color:"#94a3b8",font:{size:11}}},y:{grid:{color:"#1e3a5f55"},ticks:{color:"#475569",font:{size:10},callback:v=>`$${v}`}}}});
+}
+
+// ── POSITIONS ──────────────────────────────────────────────────────
+function renderPositions(){
+  return`<div class="cards">
+    ${card("Positions","8","fully diversified","#38bdf8","fade")}
+    ${card("Total Deployed",fF(TOTAL),"updated 3/11/26","#34d399","fade1")}
+    ${card("P/L Open","-$118","0.2% — noise","#fbbf24","fade2")}
+    ${card("VICI Position","$9,831","doubled ✓","#2dd4bf","fade3",true)}
+  </div>
+  <div class="pos-grid fade">${PORTFOLIO.map(p=>{const w=((p.value/TOTAL)*100).toFixed(1);return`
+    <div class="pos-row" style="border-left:3px solid ${p.color}">
+      <div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:${p.color}">${p.symbol}</div><div style="font-size:11px;color:#475569;margin-top:2px">${p.industry}</div></div>
+      <div><div style="font-size:11px;color:#475569;margin-bottom:2px">Value</div><div class="mono" style="color:#f1f5f9;font-size:15px">${fF(p.value)}</div></div>
+      <div><div style="font-size:11px;color:#475569;margin-bottom:2px">Yield</div><div class="mono" style="color:${p.color};font-size:15px">${(p.yield*100).toFixed(1)}%</div></div>
+      <div><div style="font-size:11px;color:#475569;margin-bottom:2px">Annual Income</div><div class="mono" style="color:#34d399;font-size:15px">$${Math.round(p.value*p.yield)}</div></div>
+      <div><div style="font-size:11px;color:#475569;margin-bottom:2px">Weight</div><div class="mono" style="color:#94a3b8;font-size:15px">${w}%</div></div>
+      <div><div style="font-size:11px;color:#475569;margin-bottom:4px">Allocation</div><div class="alloc-bg"><div class="alloc-bar" style="width:${w}%;background:${p.color}"></div></div></div>
+    </div>`;}).join("")}
+  </div>`;
+}
+
+// ── VS S&P ─────────────────────────────────────────────────────────
+function renderVsSP(){
+  const c0=buildComp(0),cM=buildComp(mc);
+  return sliderHTML(mc>0?`Same $${mc.toLocaleString()}/mo added to both your dividend portfolio AND S&P 500`:"Add monthly contributions to compare both strategies side-by-side")+
+  `<div class="cards">
+    ${card("Dividend Y20",fK(cM.D[20]),`8.6%/yr + $${mc.toLocaleString()}/mo`,"#34d399","fade",true)}
+    ${card("S&P 500 Y20",fK(cM.S[20]),`10.5%/yr + $${mc.toLocaleString()}/mo`,"#818cf8","fade1",true)}
+    ${card("S&P Advantage",fK(cM.S[20]-cM.D[20]),"pure appreciation edge","#f472b6","fade2")}
+    ${card("Div Income Y20",fF(cM.IN[20]),"annual passive income","#fbbf24","fade3",true)}
+  </div>
+  <div class="hint-box fade2"><p style="color:#64748b;font-size:12px;line-height:1.7">${mc>0?`Showing the same $${mc.toLocaleString()}/mo added to both strategies. Solid lines = with contributions. Dashed = baseline.`:"Set a monthly contribution above to compare same dollars in different strategies."}</p></div>
+  <div class="box fade2">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+      <div><div class="box-title">Dividend vs S&P 500 — 20 Years</div><div class="box-sub">${fF(TOTAL)} starting capital · ${mc>0?`+$${mc.toLocaleString()}/mo applied to both`:"no contributions"}</div></div>
+      ${leg([["#34d399","Dividend","w/ contrib"],["#818cf8","S&P 500","w/ contrib"],["#1e5c3a","Div baseline"],["#2d2a5e","S&P baseline"]])}
+    </div>
+    <div style="height:320px;"><canvas id="c-sp"></canvas></div>
+  </div>
+  <div class="box fade3">
+    <div class="box-title" style="margin-bottom:20px;">Year-by-Year: Dividend vs S&P</div>
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Year</th><th>Dividend</th><th>S&P 500</th><th>S&P Edge</th><th>Div Annual Income</th><th>Div Monthly</th></tr></thead>
+      <tbody>${c0.L.map((l,i)=>`<tr>
+        <td style="color:#64748b">${l}</td><td style="color:#34d399">${fK(cM.D[i])}</td><td style="color:#818cf8">${fK(cM.S[i])}</td>
+        <td style="color:#818cf8">+${fK(cM.S[i]-cM.D[i])}</td><td style="color:#fbbf24">${fF(cM.IN[i])}</td>
+        <td style="color:#94a3b8">${fF(Math.round(cM.IN[i]/12))}</td></tr>`).join("")}
+      </tbody>
+    </table></div>
+  </div>`;
+}
+function initSP(){
+  const c0=buildComp(0),cM=buildComp(mc);
+  mkChart("c-sp","line",{labels:c0.L,datasets:[
+    {label:"Dividend (baseline)",data:c0.D,borderColor:"#1e5c3a",borderDash:[5,4],borderWidth:1.5,fill:false,tension:0.4,pointRadius:0},
+    {label:"S&P (baseline)",    data:c0.S,borderColor:"#2d2a5e",borderDash:[5,4],borderWidth:1.5,fill:false,tension:0.4,pointRadius:0},
+    {label:`Dividend +$${mc.toLocaleString()}/mo`,data:cM.D,borderColor:"#34d399",backgroundColor:"rgba(52,211,153,0.12)",fill:true,tension:0.4,borderWidth:2.5,pointRadius:0},
+    {label:`S&P 500 +$${mc.toLocaleString()}/mo`, data:cM.S,borderColor:"#818cf8",backgroundColor:"rgba(129,140,248,0.1)",fill:true,tension:0.4,borderWidth:2.5,pointRadius:0},
+  ]});
+}
+
+// ── VS BTC ─────────────────────────────────────────────────────────
+function renderVsBTC(){
+  const c0=buildComp(0),cM=buildComp(mc);
+  return sliderHTML(mc>0?`Same $${mc.toLocaleString()}/mo applied equally to Dividend, S&P, and all BTC scenarios`:"Add contributions to see the same dollars projected across all asset classes")+
+  `<div class="cards">
+    ${card("Dividend Y20",fK(cM.D[20]),"8.6%/yr · stable income","#34d399","fade",true)}
+    ${card("S&P 500 Y20",fK(cM.S[20]),"10.5%/yr · index","#818cf8","fade1")}
+    ${card("BTC Base Y20",fK(cM.BM[20]),"40%/yr · speculative","#f59e0b","fade2",true)}
+    ${card("BTC Bull Y20",fK(cM.BU[20]),"75%/yr · extreme scenario","#ef4444","fade3")}
+  </div>
+  <div class="warning-box fade">
+    <p style="color:#f59e0b;font-size:12px;font-weight:600;margin-bottom:4px;">⚠ BTC Projection Disclaimer</p>
+    <p style="color:#78716c;font-size:12px;line-height:1.6">${mc>0?`Showing $${mc.toLocaleString()}/mo invested consistently. BTC scenarios are speculative — past returns are not indicative of future performance. BTC produces zero passive income and has historically drawn down 80%+.`:"BTC past returns are extraordinary and not predictable forward. Bear (20%), Base (40%), Bull (75%) are illustrative only."}</p>
+  </div>
+  <div class="box fade2">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+      <div><div class="box-title">All Asset Classes — 20 Year Horizon</div><div class="box-sub">${fF(TOTAL)} starting capital${mc>0?` + $${mc.toLocaleString()}/mo across all`:""} · Solid = w/ contrib · Dashed = baseline</div></div>
+      ${leg([["#34d399","Dividend","8.6%"],["#818cf8","S&P","10.5%"],["#94a3b8","BTC Bear","20%"],["#f59e0b","BTC Base","40%"],["#ef4444","BTC Bull","75%"]])}
+    </div>
+    <div style="height:340px;"><canvas id="c-btc"></canvas></div>
+  </div>
+  <div class="box fade3">
+    <div class="box-title" style="margin-bottom:20px;">Year-by-Year: All Scenarios</div>
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Year</th><th>Dividend</th><th>S&P 500</th><th>BTC Bear 20%</th><th>BTC Base 40%</th><th>BTC Bull 75%</th></tr></thead>
+      <tbody>${c0.L.map((l,i)=>`<tr>
+        <td style="color:#64748b">${l}</td><td style="color:#34d399">${fK(cM.D[i])}</td><td style="color:#818cf8">${fK(cM.S[i])}</td>
+        <td style="color:#94a3b8">${fK(cM.BB[i])}</td><td style="color:#f59e0b">${fK(cM.BM[i])}</td><td style="color:#ef4444">${fK(cM.BU[i])}</td></tr>`).join("")}
+      </tbody>
+    </table></div>
+    <div class="takeaway">
+      <p style="color:#94a3b8;font-size:13px;font-weight:600;margin-bottom:8px;">The honest takeaway:</p>
+      <p style="color:#64748b;font-size:12px;line-height:1.7">If BTC's base case holds, it dominates — but requires conviction through 80%+ drawdowns with <span style="color:#ef4444">zero income</span>. Your dividend portfolio trades some upside for <span style="color:#34d399">reliability, passive income, and compounding stability</span>. A high-income surgeon building long-term wealth benefits most from <span style="color:#fbbf24">all three in deliberate allocations</span> — exactly what you're building.</p>
+    </div>
+  </div>`;
+}
+function initBTC(){
+  const c0=buildComp(0),cM=buildComp(mc);
+  mkChart("c-btc","line",{labels:c0.L,datasets:[
+    {label:"Dividend (base)",  data:c0.D, borderColor:"#34d399",borderDash:[5,4],borderWidth:1,fill:false,tension:0.4,pointRadius:0},
+    {label:"S&P (base)",       data:c0.S, borderColor:"#818cf8",borderDash:[5,4],borderWidth:1,fill:false,tension:0.4,pointRadius:0},
+    {label:"BTC Bear (base)",  data:c0.BB,borderColor:"#94a3b8",borderDash:[4,4],borderWidth:1,fill:false,tension:0.4,pointRadius:0},
+    {label:"BTC Base (base)",  data:c0.BM,borderColor:"#f59e0b",borderDash:[4,4],borderWidth:1,fill:false,tension:0.4,pointRadius:0},
+    {label:"BTC Bull (base)",  data:c0.BU,borderColor:"#ef4444",borderDash:[4,4],borderWidth:1,fill:false,tension:0.4,pointRadius:0},
+    {label:`Dividend +$${mc.toLocaleString()}/mo`, data:cM.D, borderColor:"#34d399",borderWidth:2.5,fill:false,tension:0.4,pointRadius:0},
+    {label:`S&P +$${mc.toLocaleString()}/mo`,      data:cM.S, borderColor:"#818cf8",borderWidth:2,  fill:false,tension:0.4,pointRadius:0},
+    {label:`BTC Bear +$${mc.toLocaleString()}/mo`, data:cM.BB,borderColor:"#94a3b8",borderWidth:1.5,fill:false,tension:0.4,pointRadius:0},
+    {label:`BTC Base +$${mc.toLocaleString()}/mo`, data:cM.BM,borderColor:"#f59e0b",borderWidth:2.5,fill:false,tension:0.4,pointRadius:0},
+    {label:`BTC Bull +$${mc.toLocaleString()}/mo`, data:cM.BU,borderColor:"#ef4444",borderWidth:2,  fill:false,tension:0.4,pointRadius:0},
+  ]});
+}
+
+// ── TABS + RENDER ──────────────────────────────────────────────────
+const TABS=["overview","growth","income","positions","vs S&P","vs BTC"];
+let activeTab="overview";
+
+function initHeader(){
+  document.getElementById("hdr-total").textContent=fF(TOTAL);
+  document.getElementById("hdr-sub").textContent=`8 positions · ${(BLD*100).toFixed(2)}% blended yield`;
+  const el=document.getElementById("tabs");el.innerHTML="";
+  TABS.forEach(t=>{
+    const b=document.createElement("button");b.className="tab-btn"+(t===activeTab?" active":"");
+    b.textContent=t;b.onclick=()=>{activeTab=t;document.querySelectorAll(".tab-btn").forEach(x=>x.classList.toggle("active",x.textContent===t));renderContent();};
+    el.appendChild(b);
+  });
+}
+
+function renderContent(){
+  const el=document.getElementById("content");
+  if(activeTab==="overview")       el.innerHTML=renderOverview();
+  else if(activeTab==="growth")    el.innerHTML=renderGrowth();
+  else if(activeTab==="income")    el.innerHTML=renderIncome();
+  else if(activeTab==="positions") el.innerHTML=renderPositions();
+  else if(activeTab==="vs S&P")    el.innerHTML=renderVsSP();
+  else if(activeTab==="vs BTC")    el.innerHTML=renderVsBTC();
+  bindSlider();
+  requestAnimationFrame(()=>{
+    if(activeTab==="overview")       initOverview();
+    else if(activeTab==="growth")    initGrowth();
+    else if(activeTab==="income")    initIncome();
+    else if(activeTab==="vs S&P")    initSP();
+    else if(activeTab==="vs BTC")    initBTC();
+  });
+}
+
+initHeader();
+renderContent();
+</script>
+</body>
+</html>
